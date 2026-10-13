@@ -1,62 +1,108 @@
-// 创建地图
 let map = L.map('map')
-    .setView([30, 120], 3);
+    .setView([30,120],3);
 
 
-// 加载地图底图
+
 L.tileLayer(
-    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    {
-        attribution: '&copy; OpenStreetMap contributors'
-    }
-).addTo(map);
+'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+)
+.addTo(map);
 
 
-// 从 json 文件读取旅行数据
+
+// 默认数据
+let defaultPlaces = [];
+
+
+// 读取json
 fetch("data/places.json")
 
-    .then(response => response.json())
+.then(res => res.json())
 
-    .then(places => {
-
-
-        // 遍历所有旅行地点
-        places.forEach(place => {
+.then(data => {
 
 
-            // 创建标记点
-            let marker = L.marker(
-                [
-                    place.lat,
-                    place.lng
-                ]
-            )
-            .addTo(map);
+    defaultPlaces = data;
+
+
+    loadPlaces();
+
+
+});
 
 
 
-            // 点击标记显示信息
-            marker.bindPopup(
 
-                `
-                <h3>${place.name}</h3>
-                <p>${place.info}</p>
-                `
 
+function loadPlaces(){
+
+
+    let userPlaces =
+    JSON.parse(
+        localStorage.getItem("places")
+    )
+    ||
+    [];
+
+
+
+    let allPlaces =
+    defaultPlaces.concat(userPlaces);
+
+
+
+    showPlaces(allPlaces);
+
+
+}
+
+
+
+
+function showPlaces(places){
+
+
+    places.forEach(place=>{
+
+
+        if(
+            !place.lat ||
+            !place.lng
+        ){
+
+            console.log(
+            "无坐标:",
+            place.name
             );
 
+            return;
 
-        });
+        }
 
 
-    })
 
-    // 错误处理
-    .catch(error => {
+        let marker =
+        L.marker(
+            [
+                place.lat,
+                place.lng
+            ]
+        )
+        .addTo(map);
 
-        console.error(
-            "旅行数据加载失败:",
-            error
+
+
+        marker.bindPopup(
+
+        `
+        <h3>${place.name}</h3>
+        <p>${place.info}</p>
+        `
+
         );
 
+
     });
+
+
+}
