@@ -3,67 +3,60 @@ let map = L.map('map')
     .setView([30, 120], 3);
 
 
-// 添加地图底图
+// 加载地图底图
 L.tileLayer(
-    'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {
+        attribution: '&copy; OpenStreetMap contributors'
+    }
 ).addTo(map);
 
 
+// 从 json 文件读取旅行数据
+fetch("data/places.json")
 
-// 我的旅行地点
+    .then(response => response.json())
 
-let places = [
-
-    {
-        name: "大连",
-        lat: 38.914,
-        lng: 121.6147,
-        info: "我的家乡"
-    },
+    .then(places => {
 
 
-    {
-        name: "上海",
-        lat: 31.2304,
-        lng: 121.4737,
-        info: "上海旅行记录"
-    },
+        // 遍历所有旅行地点
+        places.forEach(place => {
 
 
-    {
-        name: "东京",
-        lat: 35.6762,
-        lng: 139.6503,
-        info: "日本旅行"
-    }
-
-];
+            // 创建标记点
+            let marker = L.marker(
+                [
+                    place.lat,
+                    place.lng
+                ]
+            )
+            .addTo(map);
 
 
 
-// 添加标记
+            // 点击标记显示信息
+            marker.bindPopup(
 
-places.forEach(place => {
+                `
+                <h3>${place.name}</h3>
+                <p>${place.info}</p>
+                `
 
-
-    let marker = L.marker(
-        [
-            place.lat,
-            place.lng
-        ]
-    )
-    .addTo(map);
+            );
 
 
-
-    marker.bindPopup(
-
-        `
-        <h3>${place.name}</h3>
-        <p>${place.info}</p>
-        `
-
-    );
+        });
 
 
-});
+    })
+
+    // 错误处理
+    .catch(error => {
+
+        console.error(
+            "旅行数据加载失败:",
+            error
+        );
+
+    });
