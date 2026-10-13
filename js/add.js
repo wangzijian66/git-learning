@@ -1,18 +1,15 @@
-function savePlace(){
+async function savePlace(){
 
 
-    // 获取输入内容
-    let name = document.getElementById("name").value;
+    let name =
+    document.getElementById("name").value;
 
-    let lat = document.getElementById("lat").value;
 
-    let lng = document.getElementById("lng").value;
-
-    let info = document.getElementById("info").value;
+    let info =
+    document.getElementById("info").value;
 
 
 
-    // 检查必填项
     if(!name){
 
         alert("请输入城市名称");
@@ -22,59 +19,99 @@ function savePlace(){
     }
 
 
-    if(!lat || !lng){
 
-        alert("请输入经纬度");
+    // 调用免费地理编码接口
+    let url =
+    `https://nominatim.openstreetmap.org/search?format=json&q=${name}`;
 
-        return;
+
+
+    try{
+
+
+        let response =
+        await fetch(url);
+
+
+
+        let data =
+        await response.json();
+
+
+
+        if(data.length === 0){
+
+            alert("没有找到该地点");
+
+            return;
+
+        }
+
+
+
+        // 获取第一个结果
+        let place = {
+
+
+            name:name,
+
+
+            lat:
+            Number(data[0].lat),
+
+
+            lng:
+            Number(data[0].lon),
+
+
+            info:info
+
+        };
+
+
+
+        // 保存用户地点
+
+        let places =
+        JSON.parse(
+            localStorage.getItem("places")
+        )
+        ||
+        [];
+
+
+
+        places.push(place);
+
+
+
+        localStorage.setItem(
+            "places",
+            JSON.stringify(places)
+        );
+
+
+
+        alert("添加成功");
+
+
+
+        window.location.href="index.html";
+
+
 
     }
 
+    catch(error){
 
 
-    // 创建旅行地点对象
-    let place = {
-
-        name: name,
-
-        lat: Number(lat),
-
-        lng: Number(lng),
-
-        info: info
-
-    };
+        console.error(error);
 
 
-
-    // 获取已有用户添加的数据
-    let places = 
-    JSON.parse(
-        localStorage.getItem("places")
-    )
-    ||
-    [];
+        alert("定位失败");
 
 
-
-    // 添加新地点
-    places.push(place);
-
-
-
-    // 保存回浏览器
-    localStorage.setItem(
-        "places",
-        JSON.stringify(places)
-    );
-
-
-
-    alert("添加成功！");
-
-
-    // 返回地图首页
-    window.location.href = "index.html";
+    }
 
 
 }
