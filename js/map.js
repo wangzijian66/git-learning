@@ -1,237 +1,149 @@
-let map = L.map('map')
-    .setView([30, 120], 3);
 
+let map = L.map('map').setView([30, 120], 3);
 
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png')
+    .addTo(map);
 
-L.tileLayer(
-    'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-)
-.addTo(map);
-
-
-
-// 默认地点数据
+// 默认地点
 let defaultPlaces = [];
-
-
 
 // 读取默认地点
 fetch("data/places.json")
-
-.then(res => res.json())
-
-.then(data => {
-
-
-    defaultPlaces = data;
-
-
-    loadPlaces();
-
-
-});
-
-
-
-
-
-// 加载所有地点
-function loadPlaces(){
-
-
-    // 获取用户添加地点
-    let userPlaces =
-    JSON.parse(
-        localStorage.getItem("places")
-    )
-    ||
-    [];
-
-
-
-    // 合并默认地点和用户地点
-    let allPlaces =
-    defaultPlaces.concat(userPlaces);
-
-
-
-    showPlaces(allPlaces);
-
-
-}
-
-
-
-
-
-// 显示地点
-function showPlaces(places){
-
-
-    places.forEach(place=>{
-
-
-        // 没有坐标不显示
-        if(
-            !place.lat ||
-            !place.lng
-        ){
-
-            console.log(
-                "无坐标:",
-                place.name
-            );
-
-            return;
-
-        }
-
-
-
-        // 创建标记
-        let marker =
-        L.marker(
-            [
-                place.lat,
-                place.lng
-            ]
-        )
-        .addTo(map);
-
-
-
-        // 判断是不是用户添加的地点
-        let isUserPlace =
-        isUserCreated(place);
-
-
-
-        let deleteButton = "";
-
-
-
-        if(isUserPlace){
-
-
-            deleteButton = `
-
-            <br>
-
-            <button onclick="deletePlace('${place.name}')">
-
-            删除
-
-            </button>
-
-            `;
-
-
-        }
-
-
-
-
-        // 弹窗
-        marker.bindPopup(
-
-        `
-
-        <h3>${place.name}</h3>
-
-
-        <p>${place.info || ""}</p>
-
-
-        ${deleteButton}
-
-
-        `
-
-        );
-
-
-
+    .then(res => res.json())
+    .then(data => {
+        defaultPlaces = data;
+        loadPlaces();
+    })
+    .catch(error => {
+        console.error("读取默认地点失败：", error);
+        loadPlaces();
     });
 
-
-}
-
-
-
-
-
-// 判断地点是否来自localStorage
-function isUserCreated(place){
-
-
-    let userPlaces =
-    JSON.parse(
+// 加载全部地点
+function loadPlaces() {
+    let userPlaces = JSON.parse(
         localStorage.getItem("places")
-    )
-    ||
-    [];
+    ) || [];
 
-
-
-    return userPlaces.some(
-
-        item =>
-
-        item.name === place.name
-
-    );
-
-
+    let allPlaces = defaultPlaces.concat(userPlaces);
+    showPlaces(allPlaces, userPlaces);
 }
 
+// 显示地图标记
+function showPlaces(places, userPlaces) {
+    places.forEach(place => {
+        if (
+            place.lat == null ||
+            place.lng == null ||
+            place.lat === "" ||
+            place.lng === ""
+        ) {
+            console.log("无坐标：", place.name);
+            return;
+        }
 
+        let marker = L.marker([
+            Number(place.lat),
+            Number(place.lng)
+        ]).addTo(map);
 
+        // 判断是不是用户添加的地点
+        let isUserPlace = userPlaces.some(
+            item => item === place
+        );
 
+        let buttons = "";
 
+        if (isUserPlace) {
+            buttons = `
+                <br>
+                <button onclick="editPlace(${userPlaces.indexOf(place)})">
+                    编辑
+                </button>
+                <button onclick="deletePlace(${userPlaces.indexOf(place)})">
+                    删除
+                </button>
+            `;
+        }
 
+        marker.bindPopup(`
+            <h3>${escapeHTML(place.name)}</h3>
+            <p>${escapeHTML(place.info || "")}</p>
+            ${buttons}
+        `);
+    });
+}
+
+// 防止地点文字被当作 HTML 解析
+function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[char]);
+}
+
+// 编辑地点
+function editPlace(index) {
+    let places = JSON.parse(
+        localStorage.getItem("places")
+    ) || [];
+
+    let place = places[index];
+
+    if (!place) {
+        alert("找不到这个地点，请刷新页面后重试");
+        return;
+    }
+
+    let newName = prompt("修改城市名称：", place.name);
+
+    if (newName === null) return;
+
+    newName = newName.trim();
+
+    if (!newName) {
+        alert("城市名称不能为空");
+        return;
+    }
+
+    let newInfo = prompt("修改旅行描述：", place.info || "");
+
+    if (newInfo === null) return;
+
+    places[index] = {
+        ...place,
+        name: newName,
+        info: newInfo.trim()
+    };
+
+    localStorage.setItem("places", JSON.stringify(places));
+
+    alert("修改成功！");
+    location.reload();
+}
 
 // 删除地点
-function deletePlace(name){
-
-
-
-    let places =
-    JSON.parse(
+function deletePlace(index) {
+    let places = JSON.parse(
         localStorage.getItem("places")
-    )
-    ||
-    [];
+    ) || [];
 
+    if (!places[index]) {
+        alert("找不到这个地点，请刷新页面后重试");
+        return;
+    }
 
+    if (!confirm(`确定删除「${places[index].name}」吗？`)) {
+        return;
+    }
 
-    let newPlaces =
+    places.splice(index, 1);
 
-    places.filter(
+    localStorage.setItem("places", JSON.stringify(places));
 
-        place =>
-
-        place.name !== name
-
-    );
-
-
-
-    localStorage.setItem(
-
-        "places",
-
-        JSON.stringify(newPlaces)
-
-    );
-
-
-
-    alert("删除成功");
-
-
-
+    alert("删除成功！");
     location.reload();
-
-
-
 }
