@@ -1,20 +1,21 @@
 let map = L.map('map')
-    .setView([30,120],3);
+    .setView([30, 120], 3);
 
 
 
 L.tileLayer(
-'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+    'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 )
 .addTo(map);
 
 
 
-// 默认数据
+// 默认地点数据
 let defaultPlaces = [];
 
 
-// 读取json
+
+// 读取默认地点
 fetch("data/places.json")
 
 .then(res => res.json())
@@ -34,9 +35,11 @@ fetch("data/places.json")
 
 
 
+// 加载所有地点
 function loadPlaces(){
 
 
+    // 获取用户添加地点
     let userPlaces =
     JSON.parse(
         localStorage.getItem("places")
@@ -46,6 +49,7 @@ function loadPlaces(){
 
 
 
+    // 合并默认地点和用户地点
     let allPlaces =
     defaultPlaces.concat(userPlaces);
 
@@ -59,20 +63,23 @@ function loadPlaces(){
 
 
 
+
+// 显示地点
 function showPlaces(places){
 
 
     places.forEach(place=>{
 
 
+        // 没有坐标不显示
         if(
             !place.lat ||
             !place.lng
         ){
 
             console.log(
-            "无坐标:",
-            place.name
+                "无坐标:",
+                place.name
             );
 
             return;
@@ -81,6 +88,7 @@ function showPlaces(places){
 
 
 
+        // 创建标记
         let marker =
         L.marker(
             [
@@ -92,17 +100,138 @@ function showPlaces(places){
 
 
 
+        // 判断是不是用户添加的地点
+        let isUserPlace =
+        isUserCreated(place);
+
+
+
+        let deleteButton = "";
+
+
+
+        if(isUserPlace){
+
+
+            deleteButton = `
+
+            <br>
+
+            <button onclick="deletePlace('${place.name}')">
+
+            删除
+
+            </button>
+
+            `;
+
+
+        }
+
+
+
+
+        // 弹窗
         marker.bindPopup(
 
         `
+
         <h3>${place.name}</h3>
-        <p>${place.info}</p>
+
+
+        <p>${place.info || ""}</p>
+
+
+        ${deleteButton}
+
+
         `
 
         );
 
 
+
     });
+
+
+}
+
+
+
+
+
+// 判断地点是否来自localStorage
+function isUserCreated(place){
+
+
+    let userPlaces =
+    JSON.parse(
+        localStorage.getItem("places")
+    )
+    ||
+    [];
+
+
+
+    return userPlaces.some(
+
+        item =>
+
+        item.name === place.name
+
+    );
+
+
+}
+
+
+
+
+
+
+
+// 删除地点
+function deletePlace(name){
+
+
+
+    let places =
+    JSON.parse(
+        localStorage.getItem("places")
+    )
+    ||
+    [];
+
+
+
+    let newPlaces =
+
+    places.filter(
+
+        place =>
+
+        place.name !== name
+
+    );
+
+
+
+    localStorage.setItem(
+
+        "places",
+
+        JSON.stringify(newPlaces)
+
+    );
+
+
+
+    alert("删除成功");
+
+
+
+    location.reload();
+
 
 
 }
