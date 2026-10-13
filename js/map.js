@@ -57,10 +57,10 @@ function showPlaces(places, userPlaces) {
         if (isUserPlace) {
             buttons = `
                 <br>
-                <button onclick="editPlace(${userPlaces.indexOf(place)})">
+                <button onclick="editPlace(${place.id})">
                     编辑
                 </button>
-                <button onclick="deletePlace(${userPlaces.indexOf(place)})">
+               <button onclick="deletePlace(${place.id})">
                     删除
                 </button>
             `;
@@ -86,12 +86,17 @@ function escapeHTML(value) {
 }
 
 // 编辑地点
-function editPlace(index) {
+function editPlace(id) {
     let places = JSON.parse(
         localStorage.getItem("places")
     ) || [];
 
-    let place = places[index];
+    let index = places.findIndex(
+    place => place.id === id
+);
+
+
+let place = places[index];
 
     if (!place) {
         alert("找不到这个地点，请刷新页面后重试");
@@ -126,12 +131,17 @@ function editPlace(index) {
 }
 
 // 删除地点
-function deletePlace(index) {
+function deletePlace(id) {
     let places = JSON.parse(
         localStorage.getItem("places")
     ) || [];
 
-    if (!places[index]) {
+    let index = places.findIndex(
+    place => place.id === id
+);
+
+
+if(index === -1){
         alert("找不到这个地点，请刷新页面后重试");
         return;
     }

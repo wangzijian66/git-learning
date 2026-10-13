@@ -53,20 +53,22 @@ async function savePlace(){
         let place = {
 
 
-            name:name,
+    id: Date.now(),
 
 
-            lat:
-            Number(data[0].lat),
+    name:name,
 
 
-            lng:
-            Number(data[0].lon),
+    lat:Number(data[0].lat),
 
 
-            info:info
+    lng:Number(data[0].lon),
 
-        };
+
+    info:info
+
+
+};
 
 
 
