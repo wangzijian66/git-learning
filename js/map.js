@@ -1,76 +1,68 @@
 
-let map = L.map('map').setView([30, 120], 3);
+const API_URL = "http://localhost:3000/api/places";
 
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png')
-    .addTo(map);
+let map = L.map("map").setView([30, 120], 3);
 
-// 默认地点
-let defaultPlaces = [];
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
 
-// 读取默认地点
-fetch("data/places.json")
-    .then(res => res.json())
-    .then(data => {
-        defaultPlaces = data;
-        loadPlaces();
-    })
-    .catch(error => {
-        console.error("读取默认地点失败：", error);
-        loadPlaces();
-    });
+// 保存当前地图上的标记，方便后续刷新
+let markers = [];
 
-// 加载全部地点
-function loadPlaces() {
-    let userPlaces = JSON.parse(
-        localStorage.getItem("places")
-    ) || [];
+// 从后端 API 加载地点
+async function loadPlaces() {
+    try {
+        const response = await fetch(API_URL);
 
-    let allPlaces = defaultPlaces.concat(userPlaces);
-    showPlaces(allPlaces, userPlaces);
+        if (!response.ok) {
+            throw new Error(`HTTP 错误：${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (!result.success || !Array.isArray(result.data)) {
+            throw new Error("后端返回的数据格式不正确");
+        }
+
+        showPlaces(result.data);
+        console.log("地点加载成功：", result.data);
+    } catch (error) {
+        console.error("加载地点失败：", error);
+        alert("加载旅行地点失败，请确认后端服务正在运行。");
+    }
 }
 
 // 显示地图标记
-function showPlaces(places, userPlaces) {
+function showPlaces(places) {
+    // 清除旧标记，避免重复显示
+    markers.forEach(marker => map.removeLayer(marker));
+    markers = [];
+
     places.forEach(place => {
         if (
             place.lat == null ||
             place.lng == null ||
             place.lat === "" ||
-            place.lng === ""
+            place.lng === "" ||
+            !Number.isFinite(Number(place.lat)) ||
+            !Number.isFinite(Number(place.lng))
         ) {
-            console.log("无坐标：", place.name);
+            console.log("地点坐标无效：", place.name);
             return;
         }
 
-        let marker = L.marker([
+        const marker = L.marker([
             Number(place.lat),
             Number(place.lng)
         ]).addTo(map);
 
-        // 判断是不是用户添加的地点
-        let isUserPlace = userPlaces.some(
-            item => item === place
-        );
-
-        let buttons = "";
-
-        if (isUserPlace) {
-            buttons = `
-                <br>
-                <button onclick="editPlace(${place.id})">
-                    编辑
-                </button>
-               <button onclick="deletePlace(${place.id})">
-                    删除
-                </button>
-            `;
-        }
-
         marker.bindPopup(`
             <h3>${escapeHTML(place.name)}</h3>
             <p>${escapeHTML(place.info || "")}</p>
-            ${buttons}
         `);
+
+        markers.push(marker);
     });
 }
 
@@ -85,75 +77,5 @@ function escapeHTML(value) {
     })[char]);
 }
 
-// 编辑地点
-function editPlace(id) {
-    let places = JSON.parse(
-        localStorage.getItem("places")
-    ) || [];
-
-    let index = places.findIndex(
-    place => place.id === id
-);
-
-
-let place = places[index];
-
-    if (!place) {
-        alert("找不到这个地点，请刷新页面后重试");
-        return;
-    }
-
-    let newName = prompt("修改城市名称：", place.name);
-
-    if (newName === null) return;
-
-    newName = newName.trim();
-
-    if (!newName) {
-        alert("城市名称不能为空");
-        return;
-    }
-
-    let newInfo = prompt("修改旅行描述：", place.info || "");
-
-    if (newInfo === null) return;
-
-    places[index] = {
-        ...place,
-        name: newName,
-        info: newInfo.trim()
-    };
-
-    localStorage.setItem("places", JSON.stringify(places));
-
-    alert("修改成功！");
-    location.reload();
-}
-
-// 删除地点
-function deletePlace(id) {
-    let places = JSON.parse(
-        localStorage.getItem("places")
-    ) || [];
-
-    let index = places.findIndex(
-    place => place.id === id
-);
-
-
-if(index === -1){
-        alert("找不到这个地点，请刷新页面后重试");
-        return;
-    }
-
-    if (!confirm(`确定删除「${places[index].name}」吗？`)) {
-        return;
-    }
-
-    places.splice(index, 1);
-
-    localStorage.setItem("places", JSON.stringify(places));
-
-    alert("删除成功！");
-    location.reload();
-}
+// 页面加载后获取地点
+loadPlaces();
