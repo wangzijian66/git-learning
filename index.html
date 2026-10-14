@@ -1,40 +1,138 @@
+cat > index.html <<'EOF'
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>我的旅行足迹地图</title>
+    <title>漫游 · 我的旅行地图</title>
 
     <link rel="stylesheet" href="css/style.css">
-
-    <!-- Leaflet地图样式 -->
-    <link rel="stylesheet"
-    href="https://unpkg.com/leaflet/dist/leaflet.css">
-
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
 </head>
-
-
 <body>
+    <div class="app">
+        <header class="topbar">
+            <a class="brand" href="index.html">
+                <span class="brand-icon">✦</span>
+                <span>
+                    <strong>漫游</strong>
+                    <small>MY TRAVEL JOURNAL</small>
+                </span>
+            </a>
 
-<h1>🌍 我的旅行足迹地图</h1>
+            <div class="topbar-right">
+                <span class="status-dot"></span>
+                <span class="topbar-label">我的旅行空间</span>
+                <a class="add-button" href="add.html">
+                    <span>＋</span> 添加地点
+                </a>
+            </div>
+        </header>
 
-<a href="add.html">
-添加旅行地点
-</a>
+        <main class="main-content">
+            <section class="welcome">
+                <div>
+                    <p class="eyebrow">YOUR WORLD, YOUR STORY</p>
+                    <h1>每一段旅程，都值得被记录。</h1>
+                    <p class="welcome-description">
+                        收藏走过的城市，在地图上重新发现旅途的意义。
+                    </p>
+                </div>
+                <div class="welcome-decoration" aria-hidden="true">✳</div>
+            </section>
 
+            <section class="stats-grid" aria-label="旅行统计">
+                <article class="stat-card">
+                    <div class="stat-icon green">⌖</div>
+                    <div>
+                        <p>记录的地点</p>
+                        <strong id="place-count">—</strong>
+                    </div>
+                </article>
 
-<div id="map"></div>
+                <article class="stat-card">
+                    <div class="stat-icon orange">✈</div>
+                    <div>
+                        <p>正在探索</p>
+                        <strong id="explore-count">—</strong>
+                    </div>
+                </article>
 
+                <article class="stat-card stat-tip">
+                    <div class="stat-icon blue">✦</div>
+                    <div>
+                        <p>旅行小建议</p>
+                        <strong class="tip-text">记录当下，留住风景</strong>
+                    </div>
+                </article>
+            </section>
 
-<!-- Leaflet地图功能 -->
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+            <section class="workspace">
+                <aside class="places-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <p class="eyebrow">MY COLLECTION</p>
+                            <h2>旅行足迹</h2>
+                        </div>
+                        <span id="list-count" class="count-badge">0</span>
+                    </div>
 
+                    <label class="search-box">
+                        <span aria-hidden="true">⌕</span>
+                        <input
+                            id="place-search"
+                            type="search"
+                            placeholder="搜索城市或旅行笔记..."
+                            autocomplete="off"
+                        >
+                    </label>
 
-<!-- 我们自己的代码 -->
-<script src="js/map.js"></script>
+                    <div class="list-caption">
+                        <span>我的地点</span>
+                        <span>点击查看地图</span>
+                    </div>
 
+                    <div id="place-list" class="place-list">
+                        <div class="list-message">正在加载旅行地点...</div>
+                    </div>
 
+                    <div class="sidebar-footer">
+                        <span class="footer-star">✦</span>
+                        <span>世界很大，慢慢探索。</span>
+                    </div>
+                </aside>
+
+                <section class="map-panel">
+                    <div class="map-heading">
+                        <div>
+                            <p class="eyebrow">EXPLORE YOUR WORLD</p>
+                            <h2>足迹地图</h2>
+                        </div>
+                        <span class="map-hint">
+                            <span class="status-dot"></span>
+                            点击地图标记查看详情
+                        </span>
+                    </div>
+
+                    <div id="map" aria-label="我的旅行足迹地图"></div>
+
+                    <div class="map-footer">
+                        <span><span class="legend-dot"></span> 已记录的旅行地点</span>
+                        <a href="add.html">＋ 记录新的旅程</a>
+                    </div>
+                </section>
+            </section>
+
+            <footer class="page-footer">
+                <span>漫游 · 把走过的地方，变成自己的故事。</span>
+                <span>地图数据 © OpenStreetMap</span>
+            </footer>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="js/map.js"></script>
 </body>
-
 </html>
+EOF
