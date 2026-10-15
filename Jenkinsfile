@@ -66,6 +66,7 @@ CMD ["node", "server.js"]
             }
         }
 
+ ```groovy
         stage('构建前端镜像') {
             steps {
                 script {
@@ -112,5 +113,21 @@ server {
                 sh 'docker build -f Dockerfile.frontend -t travel-map-frontend:latest .'
             }
         }
+
+        stage('验证 Kubernetes 连接') {
+            steps {
+                withKubeConfig(
+                    credentialsId: 'docker-desktop-kubeconfig',
+                    serverUrl: 'https://host.docker.internal:49940',
+                    contextName: 'docker-desktop',
+                    namespace: 'default',
+                    restrictKubeConfigAccess: false
+                ) {
+                    sh 'kubectl get nodes'
+                    sh 'kubectl get deployments,services -n default'
+                }
+            }
+        }
     }
 }
+```
