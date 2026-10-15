@@ -100,17 +100,38 @@ server {
                 sh 'docker build -f Dockerfile.frontend -t travel-map-frontend:latest .'
             }
         }
+        stage('准备 kubectl') {
+            steps {
+                sh '''
+                    set -eu
+                    mkdir -p .tools
+                    curl -fsSL \
+                      https://dl.k8s.io/release/v1.36.1/bin/linux/amd64/kubectl \
+                      -o .tools/kubectl
+                    curl -fsSL \
+                      https://dl.k8s.io/release/v1.36.1/bin/linux/amd64/kubectl.sha256 \
+                      -o .tools/kubectl.sha256
+                    echo "$(cat .tools/kubectl.sha256)  .tools/kubectl" \
+                      | sha256sum -c -
+                    chmod +x .tools/kubectl
+                    .tools/kubectl version --client
+                '''
+            }
+        }
         stage('验证 Kubernetes 连接') {
             steps {
-                withKubeConfig(
-                    credentialsId: 'docker-desktop-kubeconfig',
-                    serverUrl: 'https://host.docker.internal:49940',
-                    contextName: 'docker-desktop',
-                    namespace: 'default',
-                    restrictKubeConfigAccess: false
-                ) {
-                    sh 'kubectl get nodes'
-                    sh 'kubectl get deployments,services -n default'
+                withEnv(["PATH+KUBECTL=${env.WORKSPACE}/.tools"]) {
+                    withKubeConfig(
+                        credentialsId: 'docker-desktop-kubeconfig',
+                        serverUrl: 'https://host.docker.internal:49940',
+                        contextName: 'docker-desktop',
+                        namespace: 'default',
+                        restrictKubeConfigAccess: false
+                    ) {
+                        sh 'kubectl version --client'
+                        sh 'kubectl get nodes'
+                        sh 'kubectl get deployments,services -n default'
+                    }
                 }
             }
         }
