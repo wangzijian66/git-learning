@@ -1,6 +1,5 @@
 pipeline {
     agent any
-
     stages {
         stage('检查项目文件') {
             steps {
@@ -14,7 +13,6 @@ pipeline {
                 echo '项目文件检查通过！'
             }
         }
-
        
         stage('安装后端依赖') {
             steps {
@@ -31,7 +29,6 @@ RUN node --check server.js && node --check db.js
                 sh 'docker build -f backend/Dockerfile.ci -t travel-map-backend-ci:latest backend'
             }
         }
-
         stage('检查后端语法') {
             steps {
                 sh 'docker run --rm travel-map-backend-ci:latest node --check server.js'
@@ -39,8 +36,6 @@ RUN node --check server.js && node --check db.js
                 echo '后端语法检查通过！'
             }
         }
-
-
         stage('构建后端镜像') {
             steps {
                 script {
@@ -50,7 +45,6 @@ RUN node --check server.js && node --check db.js
 node_modules
 npm-debug.log*
 '''
-
                     writeFile file: 'backend/Dockerfile', text: '''
 FROM node:22-bookworm
 WORKDIR /app
@@ -61,12 +55,9 @@ EXPOSE 3000
 CMD ["node", "server.js"]
 '''
                 }
-
                 sh 'docker build -t travel-map-backend:latest backend'
             }
         }
-
- ```groovy
         stage('构建前端镜像') {
             steps {
                 script {
@@ -80,7 +71,6 @@ node_modules
 .env
 .env.*
 '''
-
                     writeFile file: 'Dockerfile.frontend', text: '''
 FROM nginx:alpine
 COPY index.html add.html /usr/share/nginx/html/
@@ -95,25 +85,21 @@ server {
     server_name _;
     root /usr/share/nginx/html;
     index index.html;
-
     location /api/ {
         proxy_pass http://travel-map-backend:3000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
-
     location / {
         try_files $uri $uri/ =404;
     }
 }
 '''
                 }
-
                 sh 'docker build -f Dockerfile.frontend -t travel-map-frontend:latest .'
             }
         }
-
         stage('验证 Kubernetes 连接') {
             steps {
                 withKubeConfig(
@@ -130,4 +116,3 @@ server {
         }
     }
 }
-```
