@@ -15,19 +15,31 @@ pipeline {
             }
         }
 
+       
         stage('安装后端依赖') {
             steps {
-                sh 'docker run --rm -v "$WORKSPACE/backend:/app" -w /app node:22-bookworm npm ci'
+                script {
+                    writeFile file: 'backend/Dockerfile.ci', text: '''
+FROM node:22-bookworm
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY server.js db.js ./
+RUN node --check server.js && node --check db.js
+'''
+                }
+                sh 'docker build -f backend/Dockerfile.ci -t travel-map-backend-ci:latest backend'
             }
         }
 
         stage('检查后端语法') {
             steps {
-                sh 'docker run --rm -v "$WORKSPACE/backend:/app" -w /app node:22-bookworm node --check server.js'
-                sh 'docker run --rm -v "$WORKSPACE/backend:/app" -w /app node:22-bookworm node --check db.js'
+                sh 'docker run --rm travel-map-backend-ci:latest node --check server.js'
+                sh 'docker run --rm travel-map-backend-ci:latest node --check db.js'
                 echo '后端语法检查通过！'
             }
         }
+
 
         stage('构建后端镜像') {
             steps {
