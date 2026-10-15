@@ -1,5 +1,5 @@
 
-const API_URL = "http://localhost:3000/api/places";
+const API_URL = "/api/places";
 
 // 初始化地图
 const map = L.map("map").setView([30, 120], 3);

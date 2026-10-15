@@ -1,7 +1,7 @@
 console.log("add.js 加载成功");
 console.log("add.js 加载成功");
 
-const API_URL = "http://localhost:3000/api/places";
+const API_URL = "/api/places";
 
 async function savePlace() {
     // 下面保留你原来的函数内容
